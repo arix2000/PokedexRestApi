@@ -10,7 +10,6 @@ fun Application.configureRouting() {
     
     routing {
         pokemonList()
-        // Static plugin. Try to access `/static/index.html`
         static {
             resources("pokemonListData")
         }
