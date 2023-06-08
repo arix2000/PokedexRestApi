@@ -1,5 +1,6 @@
 package com.pokedex.routes
 
+import com.pokedex.extensions.filterAndSortListBy
 import com.pokedex.models.common.ErrorResponse
 import com.pokedex.models.pokemon_item.PokemonItem
 import io.ktor.http.*
@@ -16,8 +17,13 @@ fun Route.pokemonList() {
         respondPagedData(allPokemonList)
     }
     get("/pokemonList/{query}") {
-
+        respondPagedDataByQuery(allPokemonList, call.parameters["query"])
     }
+}
+
+private fun getPokemonListJson(): List<PokemonItem> {
+    val pokemonJsonString = object {}.javaClass.getResource("/pokemonListData/pokemonDetails.json")?.readText()
+    return Json.decodeFromString(pokemonJsonString ?: "")
 }
 
 suspend fun PipelineContext<Unit, ApplicationCall>.respondPagedData(data: List<PokemonItem>) {
@@ -32,7 +38,12 @@ suspend fun PipelineContext<Unit, ApplicationCall>.respondPagedData(data: List<P
         call.respond(HttpStatusCode.OK, data.stream().skip(offset).limit(limit).toList())
 }
 
-private fun getPokemonListJson(): List<PokemonItem> {
-    val pokemonJsonString = object {}.javaClass.getResource("/pokemonListData/pokemonDetails.json")?.readText()
-    return Json.decodeFromString(pokemonJsonString ?: "")
+suspend fun PipelineContext<Unit, ApplicationCall>.respondPagedDataByQuery(
+    data: List<PokemonItem>,
+    searchQuery: String?
+) {
+    if (searchQuery.isNullOrBlank())
+        respondPagedData(data)
+    else
+        respondPagedData(data.filterAndSortListBy(searchQuery))
 }
