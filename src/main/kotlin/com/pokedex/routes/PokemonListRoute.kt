@@ -3,6 +3,7 @@ package com.pokedex.routes
 import com.pokedex.extensions.filterAndSortListBy
 import com.pokedex.models.ability_item.AbilityItem
 import com.pokedex.models.common.ErrorResponse
+import com.pokedex.models.common.Page
 import com.pokedex.models.common.SearchableByName
 import com.pokedex.models.item.Item
 import com.pokedex.models.location_item.LocationItem
@@ -79,8 +80,16 @@ private suspend inline fun <reified T> PipelineContext<Unit, ApplicationCall>.re
             HttpStatusCode.BadRequest,
             ErrorResponse(HttpStatusCode.BadRequest.value, "Limit and offset cannot be lower than 0")
         )
-    else
-        call.respond(HttpStatusCode.OK, data.stream().skip(offset).limit(limit).toList())
+    else {
+        val results = data.stream().skip(offset).limit(limit).toList()
+        var hasNext = false
+        if (results.isNotEmpty())
+            hasNext = results.last() != data.last()
+        call.respond(
+            HttpStatusCode.OK,
+            Page(hasNext = hasNext, results = results)
+        )
+    }
 }
 
 private suspend inline fun <reified T: SearchableByName> PipelineContext<Unit, ApplicationCall>.respondPagedDataByQuery(
