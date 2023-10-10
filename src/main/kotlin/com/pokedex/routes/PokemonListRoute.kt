@@ -1,6 +1,7 @@
 package com.pokedex.routes
 
 import com.pokedex.extensions.filterAndSortListBy
+import com.pokedex.extensions.filterByNames
 import com.pokedex.models.ability_item.AbilityItem
 import com.pokedex.models.common.ErrorResponse
 import com.pokedex.models.common.Page
@@ -11,6 +12,7 @@ import com.pokedex.models.move_item.MoveItem
 import com.pokedex.models.pokemon_item.PokemonItem
 import io.ktor.http.*
 import io.ktor.server.application.*
+import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.util.pipeline.*
@@ -24,6 +26,10 @@ fun Route.pokemonList() {
     }
     get("/pokemonList/{query}") {
         respondPagedDataByQuery(allPokemonList, call.parameters["query"])
+    }
+    post("/pokemonList") {
+        val pokemonNames = call.receive<List<String>>()
+        respondPagedData(allPokemonList.filterByNames(pokemonNames))
     }
 }
 
@@ -72,7 +78,7 @@ private inline fun <reified T> getItemListJson(fileName: String): List<T> {
     return Json.decodeFromString<List<T>>(pokemonJsonString ?: "")
 }
 
-private suspend inline fun <reified T> PipelineContext<Unit, ApplicationCall>.respondPagedData(data: List<T>) {
+private suspend inline fun <reified T : SearchableByName> PipelineContext<Unit, ApplicationCall>.respondPagedData(data: List<T>) {
     val offset = call.request.queryParameters["offset"]?.toLongOrNull() ?: 0
     val limit = call.request.queryParameters["limit"]?.toLongOrNull() ?: 20
     if (limit < 0L || offset < 0L)
@@ -92,7 +98,7 @@ private suspend inline fun <reified T> PipelineContext<Unit, ApplicationCall>.re
     }
 }
 
-private suspend inline fun <reified T: SearchableByName> PipelineContext<Unit, ApplicationCall>.respondPagedDataByQuery(
+private suspend inline fun <reified T : SearchableByName> PipelineContext<Unit, ApplicationCall>.respondPagedDataByQuery(
     data: List<T>,
     searchQuery: String?
 ) {

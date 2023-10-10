@@ -12,3 +12,7 @@ fun <T: SearchableByName> List<T>.filterAndSortListBy(query: String): List<T> {
     }
     return filteredAndSorted
 }
+
+fun <T: SearchableByName> List<T>.filterByNames(names: List<String>): List<T> {
+    return this.filter { names.map { name -> name.lowercase() }.contains(it.name) }
+}
