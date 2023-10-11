@@ -31,6 +31,10 @@ fun Route.pokemonList() {
         val pokemonNames = call.receive<List<String>>()
         respondPagedData(allPokemonList.filterByNames(pokemonNames))
     }
+    post("/pokemonList/{query}") {
+        val pokemonNames = call.receive<List<String>>()
+        respondPagedDataByQuery(allPokemonList.filterByNames(pokemonNames), call.parameters["query"])
+    }
 }
 
 fun Route.moveList() {
@@ -40,6 +44,14 @@ fun Route.moveList() {
     }
     get("/moveList/{query}") {
         respondPagedDataByQuery(allMoveList, call.parameters["query"])
+    }
+    post("/moveList") {
+        val moveNames = call.receive<List<String>>()
+        respondPagedData(allMoveList.filterByNames(moveNames))
+    }
+    post("/moveList/{query}") {
+        val moveNames = call.receive<List<String>>()
+        respondPagedDataByQuery(allMoveList.filterByNames(moveNames), call.parameters["query"])
     }
 }
 
@@ -51,6 +63,14 @@ fun Route.abilityList() {
     get("/abilityList/{query}") {
         respondPagedDataByQuery(allAbilityList, call.parameters["query"])
     }
+    post("/abilityList") {
+        val abilityNames = call.receive<List<String>>()
+        respondPagedData(allAbilityList.filterByNames(abilityNames))
+    }
+    post("/abilityList/{query}") {
+        val abilityNames = call.receive<List<String>>()
+        respondPagedDataByQuery(allAbilityList.filterByNames(abilityNames), call.parameters["query"])
+    }
 }
 
 fun Route.itemList() {
@@ -60,6 +80,14 @@ fun Route.itemList() {
     }
     get("/itemList/{query}") {
         respondPagedDataByQuery(allItemList, call.parameters["query"])
+    }
+    post("/itemList") {
+        val itemNames = call.receive<List<String>>()
+        respondPagedData(allItemList.filterByNames(itemNames))
+    }
+    post("/itemList/{query}") {
+        val itemNames = call.receive<List<String>>()
+        respondPagedDataByQuery(allItemList.filterByNames(itemNames), call.parameters["query"])
     }
 }
 
@@ -71,6 +99,14 @@ fun Route.locationList() {
     get("/locationList/{query}") {
         respondPagedDataByQuery(allLocationList, call.parameters["query"])
     }
+    post("/locationList") {
+        val locationNames = call.receive<List<String>>()
+        respondPagedData(allLocationList.filterByNames(locationNames))
+    }
+    post("/locationList/{query}") {
+        val locationNames = call.receive<List<String>>()
+        respondPagedDataByQuery(allLocationList.filterByNames(locationNames), call.parameters["query"])
+    }
 }
 
 private inline fun <reified T> getItemListJson(fileName: String): List<T> {
@@ -78,7 +114,8 @@ private inline fun <reified T> getItemListJson(fileName: String): List<T> {
     return Json.decodeFromString<List<T>>(pokemonJsonString ?: "")
 }
 
-private suspend inline fun <reified T : SearchableByName> PipelineContext<Unit, ApplicationCall>.respondPagedData(data: List<T>) {
+private suspend inline fun <reified T : SearchableByName>
+        PipelineContext<Unit, ApplicationCall>.respondPagedData(data: List<T>) {
     val offset = call.request.queryParameters["offset"]?.toLongOrNull() ?: 0
     val limit = call.request.queryParameters["limit"]?.toLongOrNull() ?: 20
     if (limit < 0L || offset < 0L)
